@@ -1,0 +1,29 @@
+# Mittens' fork: builds the legacy CLI for Linux so Claude's cloud workspace can unpack
+# Enshrouded game data (read-only) for the enshrouded-feed game-data wiki.
+name: Build Linux CLI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - linux-cli
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cli-legacy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.88.0'
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build -p cli-legacy --locked --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kfc-parser-linux
+          path: target/release/kfc-parser
+          retention-days: 30
+          if-no-files-found: error
