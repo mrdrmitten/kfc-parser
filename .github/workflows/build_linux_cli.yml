@@ -2,6 +2,9 @@
 # Enshrouded game data (read-only) for the enshrouded-feed game-data wiki.
 name: Build Linux CLI
 
+permissions:
+  contents: write
+
 on:
   workflow_dispatch:
   push:
@@ -27,3 +30,14 @@ jobs:
           path: target/release/kfc-parser
           retention-days: 30
           if-no-files-found: error
+      # Artifacts live on Azure storage, which Claude's workspace can't reach; a branch it can fetch.
+      - name: Publish to the linux-cli-bin branch
+        run: |
+          mkdir bin-out && cp target/release/kfc-parser bin-out/
+          cd bin-out
+          echo "Built from ${GITHUB_SHA} by run ${GITHUB_RUN_ID}" > BUILD.txt
+          git init -q -b linux-cli-bin
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "kfc-parser Linux build from ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" linux-cli-bin
